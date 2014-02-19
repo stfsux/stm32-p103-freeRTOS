@@ -82,8 +82,8 @@ SECTIONS
   {
     __arm_sec_start__ = .;
     *(.ARM.exidx*)
-    __arm_sec_end__ = .;
   }
+  __arm_sec_end__ = __arm_sec_start__ + SIZEOF(.ARM);
   
   __init_array__ = ALIGN(__arm_sec_end__, 4);
   .init_array ALIGN(__arm_sec_end__, 4) :
@@ -91,8 +91,8 @@ SECTIONS
     __init_array_start__ = .;
     KEEP(*(SORT(.init_aray.*)))
     KEEP(*(.init_array*))
-    __init_array_end__ = .;
   }
+  __init_array_end__ = __init_array_start__ + SIZEOF(.init_array);
   
   __fini_array__ = ALIGN(__init_array_end__, 4);
   .fini_array ALIGN(__init_array_end__, 4) :
@@ -100,8 +100,8 @@ SECTIONS
     __fini_array_start__ = .;
     KEEP(*(.fini_array*))
     KEEP(*(SORT(.fini_array.*)))
-    __fini_array_end__ = .;
   }
+  __fini_array_end__ = __fini_array_start__ + SIZEOF(.fini_array);
   
   /* Compiled java classes. */
   __jcr_sec__ = ALIGN(__fini_array_end__, 4);
@@ -109,8 +109,8 @@ SECTIONS
   {
     __jcr_sec_start__ = .;
     *(.jcr)
-    __jcr_sec_end__ = .;
   }
+  __jcr_sec_end__ = __jcr_sec_start__ + SIZEOF(.jcr);
   
   __dtors_load_start__ = ALIGN(__jcr_sec_end__ , 4);
   .dtors ALIGN(__jcr_sec_end__ , 4) :
