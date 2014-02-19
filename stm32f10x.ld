@@ -62,14 +62,58 @@ SECTIONS
   .text ALIGN(__init_end__ , 4) :
   {
     __text_start__ = .;
-    *(.text .text.* .glue_7t .glue_7 .gnu.linkonce.t.* .gcc_except_table)
+    *(.text)
+    *(.text.*)
+    *(.glue_7t)
+    *(.glue_7)
+    *(.gnu.linkonce.t.*)
+    *(.gcc_except_table)
+    *(.eh_frame)
+    KEEP(*(.init))
+    KEEP(*(.fini))
   }
   __text_end__ = __text_start__ + SIZEOF(.text);
 
   . = ASSERT(__text_end__ >= __FLASH_segment_start__ && __text_end__ <= (__FLASH_segment_start__ + 0x00020000) , "error: .text is too large to fit in FLASH memory segment");
 
-  __dtors_load_start__ = ALIGN(__text_end__ , 4);
-  .dtors ALIGN(__text_end__ , 4) :
+  /* ARM C++ Exceptions section. */
+  __arm_sec__ = ALIGN(__text_end__, 4);
+  .ARM ALIGN(__text_end__, 4) :
+  {
+    __arm_sec_start__ = .;
+    *(.ARM.exidx*)
+    __arm_sec_end__ = .;
+  }
+  
+  __init_array__ = ALIGN(__arm_sec_end__, 4);
+  .init_array ALIGN(__arm_sec_end__, 4) :
+  {
+    __init_array_start__ = .;
+    KEEP(*(SORT(.init_aray.*)))
+    KEEP(*(.init_array*))
+    __init_array_end__ = .;
+  }
+  
+  __fini_array__ = ALIGN(__init_array_end__, 4);
+  .fini_array ALIGN(__init_array_end__, 4) :
+  {
+    __fini_array_start__ = .;
+    KEEP(*(.fini_array*))
+    KEEP(*(SORT(.fini_array.*)))
+    __fini_array_end__ = .;
+  }
+  
+  /* Compiled java classes. */
+  __jcr_sec__ = ALIGN(__fini_array_end__, 4);
+  .jcr ALIGN(__fini_array_end__, 4) :
+  {
+    __jcr_sec_start__ = .;
+    *(.jcr)
+    __jcr_sec_end__ = .;
+  }
+  
+  __dtors_load_start__ = ALIGN(__jcr_sec_end__ , 4);
+  .dtors ALIGN(__jcr_sec_end__ , 4) :
   {
     __dtors_start__ = .;
     KEEP (*(SORT(.dtors.*))) KEEP (*(.dtors))
@@ -93,23 +137,6 @@ SECTIONS
   {
     __rodata_start__ = .;
     *(.rodata .rodata.* .gnu.linkonce.r.*)
-    . = ALIGN(4);
-    KEEP(*(.init))
-
-    . = ALIGN(4);
-    __init_array_start__ = .;
-    KEEP(*(SORT(.init_array.*)))
-    KEEP(*(.init_array))
-    __init_array_end__ = .;
-
-    . = ALIGN(4);
-    KEEP(*(.fini))
-
-    . = ALIGN(4);
-    __fini_array_start__ = .;
-    KEEP(*(.fini_array))
-    KEEP(*(SORT(.fini_array.*)))
-    __fini_array_end__ = .;
   }
   __rodata_end__ = __rodata_start__ + SIZEOF(.rodata);
 
@@ -140,7 +167,6 @@ SECTIONS
   .data __fast_run_end__ : AT(ALIGN(__fast_load_start__ + SIZEOF(.fast) , 4))
   {
     __data_start__ = .;
-    KEEP(*(.jcr))
     *(.data .data.* .gnu.linkonce.d.*)
   }
   __data_end__ = __data_start__ + SIZEOF(.data);
